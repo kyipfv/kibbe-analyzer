@@ -1,1 +1,1 @@
-web: python railway_app.py
+web: uvicorn working_app:app --host 0.0.0.0 --port $PORT --log-level info
