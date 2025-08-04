@@ -1,1 +1,1 @@
-web: python minimal_test.py
+web: uvicorn minimal_test:app --host 0.0.0.0 --port $PORT
