@@ -1,1 +1,1 @@
-web: python combined_app.py
+web: python start.py
