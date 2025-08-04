@@ -1,2 +1,5 @@
 fastapi
 uvicorn
+anthropic==0.28.0
+python-multipart
+python-dotenv
