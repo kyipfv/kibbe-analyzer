@@ -44,8 +44,15 @@ async def analyze_image(file: UploadFile = File(...)):
         
         # Initialize Claude client
         api_key = os.getenv("CLAUDE_API_KEY")
+        print(f"API Key present: {bool(api_key)}")
+        print(f"API Key length: {len(api_key) if api_key else 0}")
+        print(f"API Key starts with: {api_key[:15] if api_key else 'None'}...")
+        
         if not api_key:
             raise HTTPException(status_code=500, detail="Claude API key not configured")
+        
+        if not api_key.startswith("sk-ant-api03-"):
+            raise HTTPException(status_code=500, detail=f"Invalid API key format. Key starts with: {api_key[:15]}...")
         
         client = anthropic.Anthropic(
             api_key=api_key,
