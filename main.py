@@ -93,6 +93,15 @@ async def analyze_image(file: UploadFile = File(...)):
 async def health_check():
     return {"status": "healthy", "api_key_present": bool(os.getenv("CLAUDE_API_KEY"))}
 
+@app.post("/api/test")
+async def test_upload(file: UploadFile = File(...)):
+    return {
+        "message": "File upload working!",
+        "filename": file.filename,
+        "content_type": file.content_type,
+        "api_key_present": bool(os.getenv("CLAUDE_API_KEY"))
+    }
+
 @app.get("/", response_class=HTMLResponse)
 async def get_frontend():
     return """
@@ -254,6 +263,7 @@ async def get_frontend():
             
             <div style="text-align: center;">
                 <button id="analyzeBtn" class="analyze-btn hidden" onclick="analyzeImage()">✨ Begin Analysis</button>
+                <button id="testBtn" class="analyze-btn hidden" onclick="testUpload()" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); margin-left: 16px;">🧪 Test Upload</button>
             </div>
             
             <div id="error" class="error hidden"></div>
@@ -277,6 +287,7 @@ async def get_frontend():
                 preview.src = URL.createObjectURL(file);
                 preview.classList.remove('hidden');
                 document.getElementById('analyzeBtn').classList.remove('hidden');
+                document.getElementById('testBtn').classList.remove('hidden');
                 hideError();
             }
 
@@ -297,14 +308,32 @@ async def get_frontend():
                         body: formData
                     });
 
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
+
                     if (!response.ok) {
-                        const error = await response.json();
-                        throw new Error(error.detail || 'Analysis failed');
+                        const responseText = await response.text();
+                        console.log('Error response:', responseText);
+                        
+                        try {
+                            const error = JSON.parse(responseText);
+                            throw new Error(error.detail || 'Analysis failed');
+                        } catch (parseError) {
+                            throw new Error(`Server error (${response.status}): ${responseText.substring(0, 200)}...`);
+                        }
                     }
 
-                    const data = await response.json();
-                    showResults(data);
+                    const responseText = await response.text();
+                    console.log('Success response:', responseText);
+                    
+                    try {
+                        const data = JSON.parse(responseText);
+                        showResults(data);
+                    } catch (parseError) {
+                        throw new Error(`Invalid response format: ${responseText.substring(0, 200)}...`);
+                    }
                 } catch (err) {
+                    console.error('Full error:', err);
                     showError(err.message);
                 } finally {
                     btn.innerHTML = '✨ Begin Analysis';
@@ -343,6 +372,25 @@ async def get_frontend():
 
             function hideError() {
                 document.getElementById('error').classList.add('hidden');
+            }
+
+            async function testUpload() {
+                if (!selectedFile) return;
+
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+
+                try {
+                    const response = await fetch('/api/test', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+                    alert('Test successful: ' + JSON.stringify(data, null, 2));
+                } catch (err) {
+                    alert('Test failed: ' + err.message);
+                }
             }
 
             // Drag and drop functionality
