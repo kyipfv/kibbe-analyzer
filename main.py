@@ -356,6 +356,53 @@ async def get_frontend():
                 resultsDiv.style.display = 'block';
                 resultsDiv.scrollIntoView({ behavior: 'smooth' });
                 hideError();
+                
+                // Play sparkly "wow!" sound effect
+                playWowSound();
+            }
+
+            function playWowSound() {
+                // Create audio context for Web Audio API
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Create a sparkly "wow!" sound using oscillators
+                const now = audioContext.currentTime;
+                
+                // Main "wow" sound - sweeping frequency
+                const oscillator1 = audioContext.createOscillator();
+                const gainNode1 = audioContext.createGain();
+                
+                oscillator1.connect(gainNode1);
+                gainNode1.connect(audioContext.destination);
+                
+                oscillator1.type = 'sine';
+                oscillator1.frequency.setValueAtTime(200, now);
+                oscillator1.frequency.exponentialRampToValueAtTime(800, now + 0.3);
+                oscillator1.frequency.exponentialRampToValueAtTime(600, now + 0.6);
+                
+                gainNode1.gain.setValueAtTime(0.3, now);
+                gainNode1.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+                
+                oscillator1.start(now);
+                oscillator1.stop(now + 0.8);
+                
+                // Sparkly high frequencies
+                for (let i = 0; i < 5; i++) {
+                    const sparkle = audioContext.createOscillator();
+                    const sparkleGain = audioContext.createGain();
+                    
+                    sparkle.connect(sparkleGain);
+                    sparkleGain.connect(audioContext.destination);
+                    
+                    sparkle.type = 'sine';
+                    sparkle.frequency.value = 1000 + Math.random() * 1000;
+                    
+                    sparkleGain.gain.setValueAtTime(0.1, now + i * 0.1);
+                    sparkleGain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.2);
+                    
+                    sparkle.start(now + i * 0.1);
+                    sparkle.stop(now + i * 0.1 + 0.2);
+                }
             }
 
             function showError(message) {
