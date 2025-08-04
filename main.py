@@ -364,44 +364,48 @@ async def get_frontend():
             function playWowSound() {
                 // Create audio context for Web Audio API
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                
-                // Create a sparkly "wow!" sound using oscillators
                 const now = audioContext.currentTime;
                 
-                // Main "wow" sound - sweeping frequency
-                const oscillator1 = audioContext.createOscillator();
-                const gainNode1 = audioContext.createGain();
+                // Create sparkly bell-like sounds
+                const frequencies = [523, 659, 784, 1047, 1319]; // C5, E5, G5, C6, E6 - major chord
                 
-                oscillator1.connect(gainNode1);
-                gainNode1.connect(audioContext.destination);
+                frequencies.forEach((freq, i) => {
+                    const osc = audioContext.createOscillator();
+                    const gain = audioContext.createGain();
+                    
+                    osc.connect(gain);
+                    gain.connect(audioContext.destination);
+                    
+                    osc.type = 'triangle'; // More bell-like than sine
+                    osc.frequency.value = freq;
+                    
+                    // Quick attack, slow decay for sparkly effect
+                    gain.gain.setValueAtTime(0, now + i * 0.08);
+                    gain.gain.linearRampToValueAtTime(0.15, now + i * 0.08 + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.8);
+                    
+                    osc.start(now + i * 0.08);
+                    osc.stop(now + i * 0.08 + 0.8);
+                });
                 
-                oscillator1.type = 'sine';
-                oscillator1.frequency.setValueAtTime(200, now);
-                oscillator1.frequency.exponentialRampToValueAtTime(800, now + 0.3);
-                oscillator1.frequency.exponentialRampToValueAtTime(600, now + 0.6);
-                
-                gainNode1.gain.setValueAtTime(0.3, now);
-                gainNode1.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
-                
-                oscillator1.start(now);
-                oscillator1.stop(now + 0.8);
-                
-                // Sparkly high frequencies
-                for (let i = 0; i < 5; i++) {
+                // Add high-frequency sparkles
+                for (let i = 0; i < 8; i++) {
                     const sparkle = audioContext.createOscillator();
                     const sparkleGain = audioContext.createGain();
                     
                     sparkle.connect(sparkleGain);
                     sparkleGain.connect(audioContext.destination);
                     
-                    sparkle.type = 'sine';
-                    sparkle.frequency.value = 1000 + Math.random() * 1000;
+                    sparkle.type = 'triangle';
+                    sparkle.frequency.value = 1500 + Math.random() * 2000; // 1.5kHz - 3.5kHz
                     
-                    sparkleGain.gain.setValueAtTime(0.1, now + i * 0.1);
-                    sparkleGain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.2);
+                    const startTime = now + Math.random() * 0.6;
+                    sparkleGain.gain.setValueAtTime(0, startTime);
+                    sparkleGain.gain.linearRampToValueAtTime(0.08, startTime + 0.01);
+                    sparkleGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.15);
                     
-                    sparkle.start(now + i * 0.1);
-                    sparkle.stop(now + i * 0.1 + 0.2);
+                    sparkle.start(startTime);
+                    sparkle.stop(startTime + 0.15);
                 }
             }
 
